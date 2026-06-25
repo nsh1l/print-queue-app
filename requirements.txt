@@ -14,4 +14,4 @@ mcp>=0.9.0             # MCP client SDK
 # comtypes>=1.4.0      # COM automation for Windows print
 
 # Utilities
-pathlib>=1.0           # pathlib (stdlib on py3.11+)
+pathlib>=1.0.1           # pathlib (stdlib on py3.11+)
