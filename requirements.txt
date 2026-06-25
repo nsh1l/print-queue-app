@@ -7,7 +7,7 @@ click>=8.1.0           # CLI framework
 watchfiles>=0.21.0     # File watcher for drop zone
 
 # MCP client
-mcp>=0.9.0             # MCP client SDK
+mcp>=1.28.0             # MCP client SDK
 
 # PDF printing (Windows)
 # pywin32>=306          # Windows API (if on Windows)
