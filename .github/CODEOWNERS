@@ -1,0 +1,6 @@
+# コード所有者
+* @nsh1l
+
+# 特定ファイル
+.github/ @nsh1l
+*.md @nsh1l
