@@ -151,9 +151,13 @@ class MockMCPServer:
 <body>
 <h1>📋 {self.state.get('title','印刷キュー管理')}</h1>
 
-<div class="drop-zone">
+<div class="drop-zone" id="dropzone">
   <p>📂 XLSX / XLS / PDF をここにドロップ</p>
   <small>または、下のボタンからファイルを選択</small>
+  <form id="upload-form" enctype="multipart/form-data" style="margin-top:8px">
+    <input type="file" id="file-input" accept=".xlsx,.xls,.pdf" multiple style="display:none">
+    <button type="button" onclick="document.getElementById('file-input').click()">📁 ファイルを選択</button>
+  </form>
 </div>
 
 <div class="progress-wrap">
@@ -174,6 +178,22 @@ class MockMCPServer:
   <thead><tr><th></th><th>ファイル名</th><th>サイズ</th><th>状態</th></tr></thead>
   <tbody>{files_html}</tbody>
 </table>
+<script>
+function uploadFiles(fileList) {{
+  var fd = new FormData();
+  for (var i = 0; i < fileList.length; i++) fd.append('files', fileList[i]);
+  fetch('/upload', {{method:'POST', body: fd}}).then(function(){{location.reload()}});
+}}
+document.getElementById('file-input').addEventListener('change', function(e) {{
+  uploadFiles(this.files);
+}});
+var dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', function(e) {{ e.preventDefault(); }});
+dz.addEventListener('drop', function(e) {{
+  e.preventDefault();
+  uploadFiles(e.dataTransfer.files);
+}});
+</script>
 </body>
 </html>""".encode("utf-8")
 
@@ -246,26 +266,26 @@ class MockMCPServer:
             if not self._check_auth():
                 self._auth_error()
                 return
-            if self.path != "/mcp":
+            if self.path == "/mcp":
+                self._handle_mcp()
+            elif self.path == "/upload":
+                self._handle_upload()
+            else:
                 self.send_response(404)
                 self.end_headers()
-                return
 
+        def _handle_mcp(self):
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length)
-
             try:
                 req = json.loads(body)
             except Exception:
                 self.send_error(400, "Invalid JSON")
                 return
-
             method = req.get("method", "")
             params = req.get("params", {})
             id_ = req.get("id", 1)
-
             result = self.server._handle_mcp(method, params)
-
             resp = {"jsonrpc": "2.0", "id": id_, "result": result}
             body_out = json.dumps(resp, ensure_ascii=False).encode()
             self.send_response(200)
@@ -273,6 +293,40 @@ class MockMCPServer:
             self.send_header("Content-Length", len(body_out))
             self.end_headers()
             self.wfile.write(body_out)
+
+        def _handle_upload(self):
+            # ponytail: multipart parsing via cgi — stdlib, no deps
+            import cgi, os, tempfile
+            env = {
+                "REQUEST_METHOD": "POST",
+                "CONTENT_TYPE": self.headers.get("Content-Type", ""),
+                "CONTENT_LENGTH": self.headers.get("Content-Length", "0"),
+            }
+            form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ=env)
+            uploaded = []
+            items = form["files"] if "files" in form else []
+            if not isinstance(items, list):
+                items = [items]
+            upload_dir = os.path.join(tempfile.gettempdir(), "print_queue_uploads")
+            os.makedirs(upload_dir, exist_ok=True)
+            for item in items:
+                if not item.filename:
+                    continue
+                fn = os.path.basename(item.filename)
+                dest = os.path.join(upload_dir, fn)
+                with open(dest, "wb") as f:
+                    f.write(item.file.read())
+                uploaded.append(dest)
+            self.server._mock.events.append({
+                "type": "file_drop",
+                "data": {"paths": uploaded},
+            })
+            resp = json.dumps({"ok": True, "files": len(uploaded)}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", len(resp))
+            self.end_headers()
+            self.wfile.write(resp)
 
         def do_OPTIONS(self):
             self.send_response(200)

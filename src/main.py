@@ -233,11 +233,12 @@ class PrintQueueApp:
     # ── Status helpers ──────────────────────────────────────────────
 
     def status_summary(self) -> str:
-        counts = {}
+        counts: dict[str, int] = {}
         for item in self.queue:
-            counts[item.status.value] = counts.get(item.status.value, 0) + 1
-        parts = [f"{v}件{FileStatus(k).name}" for k, v in counts.items()]
-        return ", ".join(parts) if parts else "キュー空虚"
+            k = item.status.value
+            counts[k] = counts.get(k, 0) + 1
+        parts = [f"{v}件{k}" for k, v in counts.items()]
+        return ", ".join(parts) if parts else "キュー空"
 
     # ── GUI Sync ───────────────────────────────────────────────────
 

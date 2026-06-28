@@ -451,7 +451,7 @@ namespace PrintQueueApp.WinUI
             picker.FileTypeFilter.Add(".xlsx");
             picker.FileTypeFilter.Add(".xls");
             picker.FileTypeFilter.Add(".pdf");
-            picker.ViewMode = PickerViewMode.List);
+            picker.ViewMode = PickerViewMode.List;
 
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
