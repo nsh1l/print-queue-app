@@ -31,3 +31,5 @@ python3 test_server.py
 - ruff 使用（ruff.toml 参照）
 - 行長：120 文字
 - インデント：スペース 4 個
+
+IMPORTANT: Do not write overly defensive code. Always prefer simplicity over pathological complexity.
