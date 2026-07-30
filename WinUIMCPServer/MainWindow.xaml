@@ -122,7 +122,7 @@
                         Grid.Column="1"
                         VerticalAlignment="Center"
                         FontWeight="SemiBold"
-                        Text="このPC  ›  既定のプリンター  ›  印刷待ち" />
+                        Text="印刷するファイル" />
                 </Grid>
 
                 <Grid

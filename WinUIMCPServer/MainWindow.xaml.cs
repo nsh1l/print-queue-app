@@ -1,5 +1,6 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
@@ -36,7 +37,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception exception)
         {
-            StatusText.Text = $"ファイル選択に失敗しました: {exception.Message}";
+            SetStatus($"ファイル選択に失敗しました: {exception.Message}");
         }
     }
 
@@ -58,7 +59,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception exception)
         {
-            StatusText.Text = $"ドロップしたファイルを読み取れませんでした: {exception.Message}";
+            SetStatus($"ドロップしたファイルを読み取れませんでした: {exception.Message}");
         }
     }
 
@@ -114,11 +115,19 @@ public sealed partial class MainWindow : Window
         var submitted = _queue.Count(item => item.Status == QueueStatus.Submitted);
         var errors = _queue.Count(item => item.Status == QueueStatus.Error);
         QueueCountText.Text = $"{_queue.Count} ファイル";
-        StatusText.Text = message ?? $"待機 {pending}  ・  送信済み {submitted}  ・  エラー {errors}";
+        SetStatus(message ?? $"待機 {pending}  ・  送信済み {submitted}  ・  エラー {errors}");
         EmptyState.Visibility = _queue.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         QueueList.Visibility = _queue.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         RemoveButton.IsEnabled = false;
         ClearButton.IsEnabled = _queue.Count > 0;
         PrintButton.IsEnabled = pending > 0;
+    }
+
+    private void SetStatus(string message)
+    {
+        StatusText.Text = message;
+        var peer = FrameworkElementAutomationPeer.FromElement(StatusText)
+            ?? FrameworkElementAutomationPeer.CreatePeerForElement(StatusText);
+        peer?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
     }
 }
