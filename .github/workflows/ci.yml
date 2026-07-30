@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
-      - run: dotnet restore
-      - run: dotnet build --configuration Release --no-restore
-      - run: dotnet run --configuration Release --no-build -- --self-test
+      - run: >-
+          dotnet publish --configuration Release --runtime win-x64 --self-contained true
+          -p:WindowsAppSDKSelfContained=true -p:PublishSingleFile=false --output publish
+      - shell: pwsh
+        run: |
+          $process = Start-Process .\publish\PrintQueueApp.WinUI.exe -ArgumentList "--self-test" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { exit $process.ExitCode }
