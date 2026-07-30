@@ -1,189 +1,69 @@
-# PrintQueueApp (プリントキューアプリ)
+# Print Queue App
 
-社用ドキュメント印刷キュー管理アプリ — WinUI MCP サーバー連携
+Windows用のスタンドアローン印刷キューアプリです。XLSX / XLS / XLSM / PDF をローカルで選択またはドロップし、既定のプリンターへ送信します。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![.NET 8](https://img.shields.io/badge/.NET-8-purple.svg)](https://dotnet.microsoft.com/download/dotnet/8.0)
+- ネットワーク公開・Cloudflare Tunnel・MCPサーバーは使用しません
+- ファイルとキュー状態はアプリ実行中だけ保持します
+- 「送信済み」はWindowsへ印刷要求を渡せた状態です。物理印刷完了はプリンター側で確認してください
 
-## 📋 概要
+## Windowsでのテスト
 
-PrintQueueApp は、XLSX/XLS/PDF ファイルをドラッグ＆ドロップでキューに追加し、WinUI 3 の GUI でステータスを管理しながら社内プリンターへ印刷するためのアプリケーションです。
+### 前提
 
-- **クロスプラットフォーム**: Python 部分は Windows/Mac/Linux で動作
-- **WinUI 3 GUI**: Windows ネイティブのモダンなインターフェース
-- **MCP プロトコル**: Model Context Protocol による柔軟なサーバー/クライアント分離
-- **多形式対応**: Excel (XLSX/XLS) と PDF ファイルをサポート
+- Windows 10 version 2004 (build 19041) 以降
+- .NET 8 SDK
+- 対象ファイルを開いて印刷できる既定アプリ（PDFは通常のPDFビューア、Excel系はExcel等）
 
-## 🏗 アーキテクチャ
+### 起動
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Python PrintQueueApp (クロスプラットフォーム)           │
-│  ├── キュー管理                                         │
-│  ├── ファイル処理 (openpyxl, xlrd, PyMuPDF)             │
-│  └── 印刷実行 (Windows API / lp)                        │
-│         │                                               │
-│         │ MCP (HTTP または stdio)                       │
-│         ▼                                               │
-│  WinUI MCP サーバー (C# / WinUI 3)                      │
-│  ├── MCP ツール → WinUI ウィジェット実装                │
-│  └── GUI ウィンドウホスティング                         │
-└─────────────────────────────────────────────────────────┘
+PowerShellで実行します。
+
+```powershell
+cd WinUIMCPServer
+dotnet restore
+dotnet build -c Debug
+dotnet run -c Debug
 ```
 
-## ✨ 主な機能
+### 最小確認
 
-### キュー管理
-- ファイルのドラッグ＆ドロップ追加
-- キュー内のファイル一覧表示
-- 個別/全体の印刷操作
-- 印刷状況のリアルタイム表示
-
-### サポートファイル形式
-| 形式 | ライブラリ | 備考 |
-|------|-----------|------|
-| XLSX | openpyxl | Excel 2007+ |
-| XLS  | xlrd + xlwt | Excel 97-2003 (レガシー) |
-| PDF  | PyMuPDF | そのまま印刷または画像化 |
-
-### 印刷パイプライン
-```
-PENDING → PROCESSING → PRINTING → DONE / ERROR
+```powershell
+cd WinUIMCPServer
+dotnet run -c Debug -- --self-test
 ```
 
-## 🚀 クイックスタート
+期待値:
 
-### 前提条件
-
-- **Python 3.11+**
-- **.NET 8 SDK** (WinUI GUI を使用する場合)
-- **Windows 10/11** (WinUI GUI の場合、または Windows 印刷 API の場合)
-
-### インストール
-
-```bash
-# リポジトリのクローン
-git clone https://github.com/nsh1l/print-queue-app.git
-cd print-queue-app
-
-# 仮想環境の作成とアクティベート
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-# 依存関係のインストール
-pip install -r requirements.txt
+```text
+QueueItem self-test passed.
 ```
 
-### 実行方法
+## 配布用ビルド
 
-#### GUI モード (推奨 - Windows)
+.NET 8とWindows App Runtimeを同梱したwin-x64向けフォルダーを生成します。
 
-```bash
-# ランチャーを使用 (WinUI サーバー + Python クライアントを自動起動)
-python run_app.py
-
-# または直接
-python -m src --gui
+```powershell
+cd WinUIMCPServer
+dotnet publish -c Release -r win-x64 --self-contained true `
+  -p:WindowsAppSDKSelfContained=true `
+  -p:PublishSingleFile=false `
+  -o ..\dist\PrintQueueApp-win-x64
 ```
 
-#### モック GUI モード (Mac/Linux/開発用)
+`PrintQueueApp-win-x64`フォルダーをZIPにして配布してください。WinUIのnative DLL群が必要なため、`PrintQueueApp.WinUI.exe`だけを取り出して配布することはできません。PDFとExcelの印刷には、対象形式のWindows Shell `print`動詞を提供する関連付け済みアプリが必要です。
 
-```bash
-# Windows 不要のモックサーバーを使用
-python run_app.py --mock
-```
+### 手動テスト手順
 
-#### CLI モード
+1. アプリを起動する。
+2. PDFまたはExcelファイルを「ファイルを選択」またはドロップゾーンから追加する。
+3. 選択削除・キュークリアができることを確認する。
+4. 既定のプリンターを **Microsoft Print to PDF** に設定する。
+5. 「既定のプリンターへ送信」を押し、キューが「送信済み」になることと、Windowsの印刷ダイアログ／出力保存が起きることを確認する。
 
-```bash
-# コマンドラインからファイルを指定
-python run_app.py --cli report.xlsx invoice.pdf
-```
+## 現在の制約
 
-### 環境変数
+- キューは永続化しません。アプリ終了で消えます。
+- 印刷ジョブの物理完了・紙切れ・プリンターエラーは追跡しません。Windowsの印刷キューで確認します。
+- Excelの印刷可否は、Windowsに関連付けられたアプリの `print` 動詞に依存します。
 
-| 変数 | 説明 | デフォルト |
-|------|------|-----------|
-| `PRINT_QUEUE_MCP_URL` | MCP サーバー URL | `http://localhost:8765` |
-| `DOTNET_PATH` | dotnet CLI のパス | `dotnet` |
-
-## 🔧 MCP ツールインターフェース
-
-WinUI サーバーは以下の MCP ツールを公開します:
-
-| ツール | 説明 |
-|--------|------|
-| `winui_create_window` | メインウィンドウ作成 |
-| `winui_add_drop_zone` | ファイルドロップゾーン追加 |
-| `winui_update_file_list` | キュー一覧更新 |
-| `winui_add_button` | ツールバーボタン追加 |
-| `winui_add_label` | テキストラベル追加 |
-| `winui_set_status_text` | ステータスバー更新 |
-| `winui_set_progress` | 進捗バー更新 |
-| `winui_poll_events` | UI イベントポーリング |
-
-### 転送プロトコル
-
-- **開発/テスト**: stdio (JSON-RPC over stdin/stdout)
-- **本番**: HTTP POST `http://localhost:8765/mcp`
-
-## 📁 プロジェクト構成
-
-```
-print-queue-app/
-├── run_app.py              # アプリランチャー
-├── winui_mcp_server.py     # WinUI MCP サーバー (Python)
-├── winui_bridge.py         # WinUI ブリッジ (Windows ネイティブ)
-├── requirements.txt        # Python 依存関係
-├── src/
-│   ├── __main__.py        # エントリーポイント
-│   ├── main.py            # メインアプリケーション
-│   ├── queue_item.py      # キューアイテム定義
-│   ├── file_processor.py  # ファイル処理
-│   ├── print_engine.py    # 印刷エンジン
-│   ├── winui_client.py    # WinUI クライアント
-│   └── mock_mcp_server.py # モック MCP サーバー
-└── WinUIMCPServer/
-    ├── Program.cs         # C# エントリーポイント
-    ├── MCPServer.cs       # MCP サーバー実装
-    ├── MainWindow.xaml.cs # メインウィンドウ
-    └── PrintQueueApp.WinUI.csproj
-```
-
-## 🧪 開発
-
-### テスト
-
-```bash
-# サーバー単体テスト
-python test_server.py
-```
-
-### リモート接続
-
-リモートサーバーへの接続設定は `CONNECTION.md` を参照してください。
-
-```bash
-# リモートサーバーに接続
-python -m src --mock --url http://print.soichi.ro/ --token <token>
-```
-
-## ⚠️ 注意事項
-
-- **WinUI GUI** を使用する場合は Windows 環境が必要です
-- **Mac/Linux** では `--mock` または `--cli` モードを使用してください
-- 印刷機能は Windows プリンタードライバーに依存します
-- Unix/Linux では `lp` コマンドを使用した印刷が可能です
-
-## 📄 ライセンス
-
-MIT License
-
-## 🤝 貢献
-
-Issue や Pull Request を歓迎します！
-
-## 📞 サポート
-
-ご質問や問題がありましたら、GitHub Issues までお知らせください。
+この範囲でローカル利用の最小版は成立します。印刷ジョブ監視や部数・プリンター選択が必要になった時点で追加します。

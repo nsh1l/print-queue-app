@@ -2,41 +2,21 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
+  build-and-self-test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: WinUIMCPServer
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-dotnet@v5
         with:
-          python-version: '3.13'
-      - name: Install ruff
-        run: pip install ruff
-      - name: Run ruff check
-        run: ruff check --output-format=github .
-        continue-on-error: true
-      - name: Run ruff format check
-        run: ruff format --check .
-        continue-on-error: true
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f pyproject.toml ]; then pip install -e .; fi
-        continue-on-error: true
-      - name: Run tests
-        run: |
-          if [ -d tests ]; then python -m pytest tests -v; else echo "No tests directory"; fi
-        continue-on-error: true
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - run: dotnet build --configuration Release --no-restore
+      - run: dotnet run --configuration Release --no-build -- --self-test

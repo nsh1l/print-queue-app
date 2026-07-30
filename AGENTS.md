@@ -1,35 +1,37 @@
 # AGENTS.md - Print Queue App
 
-## プロジェクト概要
-社用ドキュメント印刷キュー管理アプリ。WinUI MCP サーバー連携でリモート印刷制御。
+## Project overview
 
-## 技術スタック
-- Python 3.13
-- WinUI MCP Server
-- FastAPI / HTTP
+Windows用のスタンドアローン印刷キューアプリ。ローカルでXLSX / XLS / XLSM / PDFを追加し、既定のWindowsプリンターへ送信する。
 
-## ビルド・実行コマンド
-```bash
-# 依存関係インストール
-pip install -r requirements.txt
+公開API、Cloudflare Tunnel、HTTPサーバー、MCP連携はこのプロジェクトの範囲外。
 
-# アプリ起動
-python3 run_app.py
+## Stack
 
-# テスト
-python3 test_server.py
+- .NET 8
+- WinUI 3 (Windows App SDK)
+- Windows Shell `print` verb
+
+## Build and test (Windows PowerShell)
+
+```powershell
+cd WinUIMCPServer
+dotnet restore
+dotnet build -c Debug
+dotnet run -c Debug -- --self-test
+dotnet run -c Debug
 ```
 
-## ファイル構造
-- `run_app.py` - アプリエントリーポイント
-- `src/` - アプリソースコード
-- `winui_mcp_server.py` - WinUI MCP サーバー
-- `winui_bridge.py` - WinUI ブリッジ
-- `WinUIMCPServer/` - MCP サーバーモジュール
+## Source layout
 
-## コードスタイル
-- ruff 使用（ruff.toml 参照）
-- 行長：120 文字
-- インデント：スペース 4 個
+- `WinUIMCPServer/Program.cs` — application entry point
+- `WinUIMCPServer/MainWindow.xaml.cs` — local WinUI queue UI
+- `WinUIMCPServer/QueueItem.cs` — supported-format validation and local print submission
+
+## Design constraints
+
+- Keep the app local-only. Do not add a server, token, remote control, or public endpoint.
+- `Submitted` means the request was accepted by Windows Shell, not physical print completion.
+- Use native Windows capabilities before dependencies or abstractions.
 
 IMPORTANT: Do not write overly defensive code. Always prefer simplicity over pathological complexity.

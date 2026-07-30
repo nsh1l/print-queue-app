@@ -1,7 +1,7 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
+  - package-ecosystem: "nuget"
+    directory: "/WinUIMCPServer"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
