@@ -29,7 +29,14 @@ public static class Program
         if (args.Length == 2 && args[0] == "--print-test")
         {
             var item = new QueueItem(System.IO.Path.GetFullPath(args[1]));
-            item.SubmitToDefaultPrinter();
+            var printerName = PrinterCatalog.GetDefaultPrinterName();
+            if (printerName is null)
+            {
+                Console.Error.WriteLine("既定のプリンターが見つかりません。");
+                Environment.ExitCode = 1;
+                return;
+            }
+            item.SubmitToPrinter(printerName);
             Console.WriteLine(item);
             if (item.Status != QueueStatus.Submitted)
                 Environment.ExitCode = 1;

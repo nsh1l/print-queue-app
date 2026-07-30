@@ -18,7 +18,7 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         Title = "印刷キュー";
         AppWindow.Resize(new SizeInt32(1000, 700));
-        RefreshQueue();
+        LoadPrinters();
     }
 
     private async void OnChooseFilesClick(object sender, RoutedEventArgs eventArgs)
@@ -100,10 +100,41 @@ public sealed partial class MainWindow : Window
 
     private void OnPrintAllClick(object sender, RoutedEventArgs eventArgs)
     {
+        if (PrinterComboBox.SelectedItem is not string printerName)
+        {
+            SetStatus("プリンターを選択してください");
+            return;
+        }
+
         foreach (var item in _queue.Where(item => item.Status == QueueStatus.Pending))
-            item.SubmitToDefaultPrinter();
+            item.SubmitToPrinter(printerName);
 
         RefreshQueue();
+    }
+
+    private void OnPrinterSelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
+    {
+        PrintButton.IsEnabled = PrinterComboBox.SelectedItem is string
+            && _queue.Any(item => item.Status == QueueStatus.Pending);
+    }
+
+    private void LoadPrinters()
+    {
+        try
+        {
+            var printers = PrinterCatalog.GetInstalledPrinterNames();
+            PrinterComboBox.ItemsSource = printers;
+            var defaultPrinter = PrinterCatalog.GetDefaultPrinterName();
+            PrinterComboBox.SelectedItem = printers.FirstOrDefault(name =>
+                string.Equals(name, defaultPrinter, StringComparison.CurrentCultureIgnoreCase))
+                ?? printers.FirstOrDefault();
+            RefreshQueue(printers.Count == 0 ? "利用できるプリンターが見つかりません" : null);
+        }
+        catch (Exception exception)
+        {
+            PrinterComboBox.IsEnabled = false;
+            RefreshQueue($"プリンター一覧を取得できませんでした: {exception.Message}");
+        }
     }
 
     private void RefreshQueue(string? message = null)
@@ -120,7 +151,7 @@ public sealed partial class MainWindow : Window
         QueueList.Visibility = _queue.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         RemoveButton.IsEnabled = false;
         ClearButton.IsEnabled = _queue.Count > 0;
-        PrintButton.IsEnabled = pending > 0;
+        PrintButton.IsEnabled = pending > 0 && PrinterComboBox.SelectedItem is string;
     }
 
     private void SetStatus(string message)

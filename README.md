@@ -1,6 +1,6 @@
 # Print Queue App
 
-Windows用のスタンドアローン印刷キューアプリです。XLSX / XLS / XLSM / PDF をローカルで選択またはドロップし、既定のプリンターへ送信します。
+Windows用のスタンドアローン印刷キューアプリです。XLSX / XLS / XLSM / PDF をローカルで選択またはドロップし、一覧から選んだプリンターへ送信します。
 
 - ネットワーク公開・Cloudflare Tunnel・MCPサーバーは使用しません
 - ファイルとキュー状態はアプリ実行中だけ保持します
@@ -50,20 +50,20 @@ dotnet publish -c Release -r win-x64 --self-contained true `
   -o ..\dist\PrintQueueApp-win-x64
 ```
 
-`PrintQueueApp-win-x64`フォルダーをZIPにして配布してください。WinUIのnative DLL群が必要なため、`PrintQueueApp.WinUI.exe`だけを取り出して配布することはできません。PDFとExcelの印刷には、対象形式のWindows Shell `print`動詞を提供する関連付け済みアプリが必要です。
+`PrintQueueApp-win-x64`フォルダーをZIPにして配布してください。WinUIのnative DLL群が必要なため、`PrintQueueApp.WinUI.exe`だけを取り出して配布することはできません。PDFとExcelの印刷には、対象形式のWindows Shell `printto`動詞を提供する関連付け済みアプリが必要です。
 
 ### 手動テスト手順
 
 1. アプリを起動する。
 2. PDFまたはExcelファイルを「ファイルを選択」またはドロップゾーンから追加する。
 3. 選択削除・キュークリアができることを確認する。
-4. 既定のプリンターを **Microsoft Print to PDF** に設定する。
-5. 「既定のプリンターへ送信」を押し、キューが「送信済み」になることと、Windowsの印刷ダイアログ／出力保存が起きることを確認する。
+4. プリンター一覧から **Microsoft Print to PDF** を選択する。
+5. 「選択したプリンターへ送信」を押し、キューが「送信済み」になることと、Windowsの印刷ダイアログ／出力保存が起きることを確認する。
 
 ## 現在の制約
 
 - キューは永続化しません。アプリ終了で消えます。
 - 印刷ジョブの物理完了・紙切れ・プリンターエラーは追跡しません。Windowsの印刷キューで確認します。
-- Excelの印刷可否は、Windowsに関連付けられたアプリの `print` 動詞に依存します。
+- Excelの印刷可否は、Windowsに関連付けられたアプリの `printto` 動詞に依存します。
 
-この範囲でローカル利用の最小版は成立します。印刷ジョブ監視や部数・プリンター選択が必要になった時点で追加します。
+この範囲でローカル利用の最小版は成立します。印刷ジョブ監視や部数設定が必要になった時点で追加します。

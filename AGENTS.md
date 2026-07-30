@@ -2,7 +2,7 @@
 
 ## Project overview
 
-Windows用のスタンドアローン印刷キューアプリ。ローカルでXLSX / XLS / XLSM / PDFを追加し、既定のWindowsプリンターへ送信する。
+Windows用のスタンドアローン印刷キューアプリ。ローカルでXLSX / XLS / XLSM / PDFを追加し、一覧から選択したWindowsプリンターへ送信する。
 
 公開API、Cloudflare Tunnel、HTTPサーバー、MCP連携はこのプロジェクトの範囲外。
 
@@ -10,7 +10,7 @@ Windows用のスタンドアローン印刷キューアプリ。ローカルでX
 
 - .NET 8
 - WinUI 3 (Windows App SDK)
-- Windows Shell `print` verb
+- Windows Shell `printto` verb
 
 ## Build and test (Windows PowerShell)
 

@@ -27,7 +27,7 @@
                     Text="印刷キュー" />
                 <TextBlock
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="PDF・Excelファイルをまとめて既定のプリンターへ送信します" />
+                    Text="PDF・Excelファイルをまとめて選択したプリンターへ送信します" />
             </StackPanel>
             <TextBlock
                 x:Name="QueueCountText"
@@ -39,6 +39,7 @@
         <Grid Grid.Row="1" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <CommandBar
@@ -80,14 +81,30 @@
                     </AppBarButton>
                 </CommandBar.SecondaryCommands>
             </CommandBar>
+            <StackPanel
+                Grid.Column="1"
+                Margin="12,0"
+                VerticalAlignment="Center"
+                Spacing="3">
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="プリンター" />
+                <ComboBox
+                    x:Name="PrinterComboBox"
+                    Width="260"
+                    AutomationProperties.Name="送信先プリンター"
+                    PlaceholderText="プリンターを選択"
+                    SelectionChanged="OnPrinterSelectionChanged" />
+            </StackPanel>
             <Button
                 x:Name="PrintButton"
-                Grid.Column="1"
+                Grid.Column="2"
                 Padding="16,8"
                 VerticalAlignment="Center"
-                AutomationProperties.Name="待機中のファイルを既定のプリンターへ送信"
+                AutomationProperties.Name="待機中のファイルを選択したプリンターへ送信"
                 Click="OnPrintAllClick"
-                Content="既定のプリンターへ送信"
+                Content="選択したプリンターへ送信"
                 IsEnabled="False"
                 Style="{StaticResource AccentButtonStyle}" />
         </Grid>
