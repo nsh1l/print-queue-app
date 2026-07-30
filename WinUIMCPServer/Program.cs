@@ -30,8 +30,6 @@ public static class Program
 
         if (args.Length == 1 && args[0] == "--self-test")
         {
-            WinRT.ComWrappersSupport.InitializeComWrappers();
-            _ = Application.Current;
             QueueItemSelfTest.Run();
             return;
         }
