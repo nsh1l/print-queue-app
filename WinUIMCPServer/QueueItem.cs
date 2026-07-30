@@ -26,6 +26,21 @@ public sealed class QueueItem
     public string Name { get; }
     public QueueStatus Status { get; private set; } = QueueStatus.Pending;
     public string Detail { get; private set; } = "待機中";
+    public string DirectoryPath => System.IO.Path.GetDirectoryName(Path) ?? string.Empty;
+    public string ExtensionLabel => System.IO.Path.GetExtension(Path).TrimStart('.').ToUpperInvariant();
+    public string AccessibleName => $"{Name}、{Detail}";
+    public string StatusLabel => Status switch
+    {
+        QueueStatus.Submitted => "送信済み",
+        QueueStatus.Error => "エラー",
+        _ => "待機中",
+    };
+    public string StatusGlyph => Status switch
+    {
+        QueueStatus.Submitted => "\uE73E",
+        QueueStatus.Error => "\uEA39",
+        _ => "\uE121",
+    };
 
     public static bool IsSupported(string path) => SupportedExtensions.Contains(System.IO.Path.GetExtension(path));
 
@@ -79,6 +94,8 @@ internal static class QueueItemSelfTest
             throw new InvalidOperationException("Unsupported documents must be rejected.");
 
         var missing = new QueueItem(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{Guid.NewGuid()}.pdf"));
+        if (missing.ExtensionLabel != "PDF" || missing.StatusLabel != "待機中")
+            throw new InvalidOperationException("Queue display metadata must match the file and status.");
         missing.SubmitToDefaultPrinter();
         if (missing.Status != QueueStatus.Error)
             throw new InvalidOperationException("Missing documents must not be submitted to the printer.");

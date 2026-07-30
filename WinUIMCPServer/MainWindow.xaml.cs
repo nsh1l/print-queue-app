@@ -1,9 +1,8 @@
-using Microsoft.UI;
-using Microsoft.UI.Text;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Graphics;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
@@ -12,103 +11,13 @@ namespace PrintQueueApp.WinUI;
 public sealed partial class MainWindow : Window
 {
     private readonly List<QueueItem> _queue = [];
-    private readonly ListView _queueList = new()
-    {
-        SelectionMode = ListViewSelectionMode.Multiple,
-        Margin = new Thickness(16, 0, 16, 8),
-    };
-    private readonly TextBlock _statusText = new()
-    {
-        Foreground = new SolidColorBrush(Colors.DimGray),
-        Margin = new Thickness(16, 6, 16, 12),
-    };
 
     public MainWindow()
     {
-        Title = "印刷キュー管理";
-        BuildUi();
+        InitializeComponent();
+        Title = "印刷キュー";
+        AppWindow.Resize(new SizeInt32(1000, 700));
         RefreshQueue();
-    }
-
-    private void BuildUi()
-    {
-        var root = new Grid { Margin = new Thickness(16) };
-        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-        var title = new TextBlock
-        {
-            Text = "📋 印刷キュー管理",
-            FontSize = 22,
-            FontWeight = FontWeights.SemiBold,
-            Margin = new Thickness(0, 0, 0, 12),
-        };
-        root.Children.Add(title);
-
-        var dropZone = new Border
-        {
-            BorderBrush = new SolidColorBrush(Colors.DodgerBlue),
-            BorderThickness = new Thickness(2),
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(20),
-            Margin = new Thickness(0, 0, 0, 12),
-            AllowDrop = true,
-            Child = new StackPanel
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Children =
-                {
-                    new TextBlock
-                    {
-                        Text = "XLSX / XLS / XLSM / PDF をここにドロップ",
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                    },
-                    new Button
-                    {
-                        Content = "📁 ファイルを選択",
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 8, 0, 0),
-                    },
-                },
-            },
-        };
-        dropZone.DragOver += OnDragOver;
-        dropZone.Drop += OnDrop;
-        ((Button)((StackPanel)dropZone.Child).Children[1]).Click += OnChooseFilesClick;
-        Grid.SetRow(dropZone, 1);
-        root.Children.Add(dropZone);
-
-        Grid.SetRow(_queueList, 2);
-        root.Children.Add(_queueList);
-
-        var buttonBar = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 8,
-            Margin = new Thickness(0, 0, 0, 4),
-        };
-        var removeButton = new Button { Content = "🗑 選択を削除" };
-        removeButton.Click += OnRemoveSelectedClick;
-        var clearButton = new Button { Content = "キューをクリア" };
-        clearButton.Click += (_, _) =>
-        {
-            _queue.Clear();
-            RefreshQueue();
-        };
-        var printButton = new Button { Content = "🖨 既定のプリンターへ送信" };
-        printButton.Click += OnPrintAllClick;
-        buttonBar.Children.Add(removeButton);
-        buttonBar.Children.Add(clearButton);
-        buttonBar.Children.Add(printButton);
-        Grid.SetRow(buttonBar, 3);
-        root.Children.Add(buttonBar);
-
-        Grid.SetRow(_statusText, 4);
-        root.Children.Add(_statusText);
-        Content = root;
     }
 
     private async void OnChooseFilesClick(object sender, RoutedEventArgs eventArgs)
@@ -127,7 +36,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception exception)
         {
-            _statusText.Text = $"ファイル選択に失敗しました: {exception.Message}";
+            StatusText.Text = $"ファイル選択に失敗しました: {exception.Message}";
         }
     }
 
@@ -149,7 +58,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception exception)
         {
-            _statusText.Text = $"ドロップしたファイルを読み取れませんでした: {exception.Message}";
+            StatusText.Text = $"ドロップしたファイルを読み取れませんでした: {exception.Message}";
         }
     }
 
@@ -172,11 +81,20 @@ public sealed partial class MainWindow : Window
         RefreshQueue(ignored > 0 ? $"{added}件追加、{ignored}件は未対応形式のため除外" : $"{added}件追加");
     }
 
+    private void OnQueueSelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
+        => RemoveButton.IsEnabled = QueueList.SelectedItems.Count > 0;
+
     private void OnRemoveSelectedClick(object sender, RoutedEventArgs eventArgs)
     {
-        var selected = _queueList.SelectedItems.Cast<QueueItem>().ToHashSet();
+        var selected = QueueList.SelectedItems.Cast<QueueItem>().ToHashSet();
         _queue.RemoveAll(item => selected.Contains(item));
-        RefreshQueue();
+        RefreshQueue(selected.Count > 0 ? $"{selected.Count}件削除しました" : null);
+    }
+
+    private void OnClearClick(object sender, RoutedEventArgs eventArgs)
+    {
+        _queue.Clear();
+        RefreshQueue("キューをクリアしました");
     }
 
     private void OnPrintAllClick(object sender, RoutedEventArgs eventArgs)
@@ -189,13 +107,18 @@ public sealed partial class MainWindow : Window
 
     private void RefreshQueue(string? message = null)
     {
-        _queueList.Items.Clear();
-        foreach (var item in _queue)
-            _queueList.Items.Add(item);
+        QueueList.ItemsSource = null;
+        QueueList.ItemsSource = _queue;
 
         var pending = _queue.Count(item => item.Status == QueueStatus.Pending);
         var submitted = _queue.Count(item => item.Status == QueueStatus.Submitted);
         var errors = _queue.Count(item => item.Status == QueueStatus.Error);
-        _statusText.Text = message ?? $"{_queue.Count}件: 待機 {pending} / 送信済み {submitted} / エラー {errors}";
+        QueueCountText.Text = $"{_queue.Count} ファイル";
+        StatusText.Text = message ?? $"待機 {pending}  ・  送信済み {submitted}  ・  エラー {errors}";
+        EmptyState.Visibility = _queue.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        QueueList.Visibility = _queue.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        RemoveButton.IsEnabled = false;
+        ClearButton.IsEnabled = _queue.Count > 0;
+        PrintButton.IsEnabled = pending > 0;
     }
 }
