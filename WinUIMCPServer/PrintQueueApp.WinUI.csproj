@@ -11,9 +11,22 @@
     <Version>1.1.2</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
   </ItemGroup>
+
+  <Target Name="CopyAppResourcesToPublishDirectory" AfterTargets="Publish">
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).pri"
+          DestinationFiles="$(PublishDir)resources.pri"
+          Condition="Exists('$(TargetDir)$(AssemblyName).pri')" />
+    <ItemGroup>
+      <AppXbf Include="$(IntermediateOutputPath)*.xbf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AppXbf)"
+          DestinationFolder="$(PublishDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>

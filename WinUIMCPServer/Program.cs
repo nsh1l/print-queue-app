@@ -6,6 +6,11 @@ public partial class App : Application
 {
     private Window? _window;
 
+    public App()
+    {
+        InitializeComponent();
+    }
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         _window = new MainWindow();
@@ -15,6 +20,9 @@ public partial class App : Application
 
 public static class Program
 {
+    [System.Runtime.InteropServices.DllImport("Microsoft.ui.xaml.dll")]
+    private static extern void XamlCheckProcessRequirements();
+
     [STAThread]
     public static void Main(string[] args)
     {
@@ -34,7 +42,14 @@ public static class Program
             return;
         }
 
+        XamlCheckProcessRequirements();
         WinRT.ComWrappersSupport.InitializeComWrappers();
-        Application.Start(_ => new App());
+        Application.Start(_ =>
+        {
+            var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(
+                Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
+            System.Threading.SynchronizationContext.SetSynchronizationContext(context);
+            new App();
+        });
     }
 }
