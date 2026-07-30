@@ -126,6 +126,9 @@ public sealed partial class MainWindow : Window
     private void SetStatus(string message)
     {
         StatusText.Text = message;
+        if (StatusText.XamlRoot is null)
+            return;
+
         var peer = FrameworkElementAutomationPeer.FromElement(StatusText)
             ?? FrameworkElementAutomationPeer.CreatePeerForElement(StatusText);
         peer?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
