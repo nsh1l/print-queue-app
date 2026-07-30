@@ -1,4 +1,4 @@
-# AGENTS.md - Print Queue App
+# AGENTS.md - AYP Print-Queue
 
 ## Project overview
 

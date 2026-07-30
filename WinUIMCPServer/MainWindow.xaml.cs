@@ -16,7 +16,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Title = "印刷キュー";
+        Title = "AYP Print-Queue";
         AppWindow.Resize(new SizeInt32(1000, 700));
         LoadPrinters();
     }

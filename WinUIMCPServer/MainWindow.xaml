@@ -24,7 +24,7 @@
                 <TextBlock
                     FontSize="28"
                     FontWeight="SemiBold"
-                    Text="印刷キュー" />
+                    Text="AYP Print-Queue" />
                 <TextBlock
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Text="PDF・Excelファイルをまとめて選択したプリンターへ送信します" />

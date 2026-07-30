@@ -8,7 +8,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Platforms>x64</Platforms>
-    <Version>1.2.0-preview.1</Version>
+    <Version>1.2.0-preview.2</Version>
+    <AssemblyTitle>AYP Print-Queue</AssemblyTitle>
+    <Product>AYP Print-Queue</Product>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>

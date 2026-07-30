@@ -1,4 +1,4 @@
-# Print Queue App — Minimal Local Specification
+# AYP Print-Queue — Minimal Local Specification
 
 ## Goal
 

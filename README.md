@@ -1,4 +1,4 @@
-# Print Queue App
+# AYP Print-Queue
 
 Windows用のスタンドアローン印刷キューアプリです。XLSX / XLS / XLSM / PDF をローカルで選択またはドロップし、一覧から選んだプリンターへ送信します。
 
@@ -47,10 +47,10 @@ cd WinUIMCPServer
 dotnet publish -c Release -r win-x64 --self-contained true `
   -p:WindowsAppSDKSelfContained=true `
   -p:PublishSingleFile=false `
-  -o ..\dist\PrintQueueApp-win-x64
+  -o ..\dist\AYP-Print-Queue-win-x64
 ```
 
-`PrintQueueApp-win-x64`フォルダーをZIPにして配布してください。WinUIのnative DLL群が必要なため、`PrintQueueApp.WinUI.exe`だけを取り出して配布することはできません。PDFとExcelの印刷には、対象形式のWindows Shell `printto`動詞を提供する関連付け済みアプリが必要です。
+`AYP-Print-Queue-win-x64`フォルダーをZIPにして配布してください。WinUIのnative DLL群が必要なため、`PrintQueueApp.WinUI.exe`だけを取り出して配布することはできません。PDFとExcelの印刷には、対象形式のWindows Shell `printto`動詞を提供する関連付け済みアプリが必要です。
 
 ### 手動テスト手順
 
