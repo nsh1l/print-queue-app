@@ -95,6 +95,21 @@ public sealed class QueueItem
     }
 }
 
+internal static class QueueBatch
+{
+    // ponytail: Four concurrent Shell launches avoid unbounded process spikes; tune this constant if target file handlers need a different limit.
+    internal const int MaxParallelSubmissions = 4;
+
+    public static Task SubmitAsync(IEnumerable<QueueItem> items, string printerName)
+        => RunAsync(items, item => item.SubmitToPrinter(printerName));
+
+    internal static Task RunAsync<T>(IEnumerable<T> items, Action<T> submit)
+        => Task.Run(() => Parallel.ForEach(
+            items,
+            new ParallelOptions { MaxDegreeOfParallelism = MaxParallelSubmissions },
+            submit));
+}
+
 internal static class PrinterCatalog
 {
     private const int ErrorFileNotFound = 2;
@@ -207,6 +222,35 @@ internal static class QueueItemSelfTest
         if (missing.Status != QueueStatus.Error)
             throw new InvalidOperationException("Missing documents must not be submitted to the printer.");
 
+        TestParallelDispatch();
         Console.WriteLine("QueueItem self-test passed.");
+    }
+
+    private static void TestParallelDispatch()
+    {
+        using var started = new CountdownEvent(QueueBatch.MaxParallelSubmissions);
+        using var release = new ManualResetEventSlim();
+        var entered = 0;
+        var dispatch = QueueBatch.RunAsync(
+            Enumerable.Range(0, QueueBatch.MaxParallelSubmissions * 2),
+            _ =>
+            {
+                var position = Interlocked.Increment(ref entered);
+                if (position <= QueueBatch.MaxParallelSubmissions)
+                    started.Signal();
+                release.Wait(TimeSpan.FromSeconds(5));
+            });
+
+        var reachedLimit = started.Wait(TimeSpan.FromSeconds(5));
+        if (reachedLimit)
+            Thread.Sleep(100);
+        var enteredBeforeRelease = Volatile.Read(ref entered);
+        release.Set();
+        dispatch.GetAwaiter().GetResult();
+
+        if (!reachedLimit)
+            throw new InvalidOperationException("Queue submissions must start in parallel.");
+        if (enteredBeforeRelease != QueueBatch.MaxParallelSubmissions)
+            throw new InvalidOperationException("Queue submissions must respect the parallel limit.");
     }
 }

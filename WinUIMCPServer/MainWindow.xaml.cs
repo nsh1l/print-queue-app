@@ -12,6 +12,7 @@ namespace PrintQueueApp.WinUI;
 public sealed partial class MainWindow : Window
 {
     private readonly List<QueueItem> _queue = [];
+    private bool _isSubmitting;
 
     public MainWindow()
     {
@@ -83,7 +84,7 @@ public sealed partial class MainWindow : Window
     }
 
     private void OnQueueSelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
-        => RemoveButton.IsEnabled = QueueList.SelectedItems.Count > 0;
+        => RemoveButton.IsEnabled = !_isSubmitting && QueueList.SelectedItems.Count > 0;
 
     private void OnRemoveSelectedClick(object sender, RoutedEventArgs eventArgs)
     {
@@ -98,7 +99,7 @@ public sealed partial class MainWindow : Window
         RefreshQueue("キューをクリアしました");
     }
 
-    private void OnPrintAllClick(object sender, RoutedEventArgs eventArgs)
+    private async void OnPrintAllClick(object sender, RoutedEventArgs eventArgs)
     {
         if (PrinterComboBox.SelectedItem is not string printerName)
         {
@@ -106,15 +107,31 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        foreach (var item in _queue.Where(item => item.Status == QueueStatus.Pending))
-            item.SubmitToPrinter(printerName);
-
-        RefreshQueue();
+        var pending = _queue.Where(item => item.Status == QueueStatus.Pending).ToList();
+        _isSubmitting = true;
+        PrintButton.IsEnabled = false;
+        RemoveButton.IsEnabled = false;
+        ClearButton.IsEnabled = false;
+        SetStatus($"{pending.Count}件を{printerName}へ送信中");
+        string? errorMessage = null;
+        try
+        {
+            await QueueBatch.SubmitAsync(pending, printerName);
+        }
+        catch (Exception exception)
+        {
+            errorMessage = $"印刷送信に失敗しました: {exception.Message}";
+        }
+        finally
+        {
+            _isSubmitting = false;
+            RefreshQueue(errorMessage);
+        }
     }
 
     private void OnPrinterSelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
     {
-        PrintButton.IsEnabled = PrinterComboBox.SelectedItem is string
+        PrintButton.IsEnabled = !_isSubmitting && PrinterComboBox.SelectedItem is string
             && _queue.Any(item => item.Status == QueueStatus.Pending);
     }
 
@@ -150,8 +167,8 @@ public sealed partial class MainWindow : Window
         EmptyState.Visibility = _queue.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         QueueList.Visibility = _queue.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         RemoveButton.IsEnabled = false;
-        ClearButton.IsEnabled = _queue.Count > 0;
-        PrintButton.IsEnabled = pending > 0 && PrinterComboBox.SelectedItem is string;
+        ClearButton.IsEnabled = !_isSubmitting && _queue.Count > 0;
+        PrintButton.IsEnabled = !_isSubmitting && pending > 0 && PrinterComboBox.SelectedItem is string;
     }
 
     private void SetStatus(string message)
