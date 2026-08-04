@@ -47,6 +47,7 @@
                 DefaultLabelPosition="Right"
                 IsDynamicOverflowEnabled="True">
                 <AppBarButton
+                    x:Name="ChooseFilesButton"
                     Click="OnChooseFilesClick"
                     Label="ファイルを追加"
                     AutomationProperties.HelpText="PDFまたはExcelファイルを選択します。ショートカットはCtrl+Oです。">

@@ -44,6 +44,9 @@ public sealed partial class MainWindow : Window
 
     private void OnDragOver(object sender, DragEventArgs eventArgs)
     {
+        if (_isSubmitting)
+            return;
+
         if (eventArgs.DataView.Contains(StandardDataFormats.StorageItems))
             eventArgs.AcceptedOperation = DataPackageOperation.Copy;
     }
@@ -66,6 +69,9 @@ public sealed partial class MainWindow : Window
 
     private void AddFiles(IEnumerable<string> paths)
     {
+        if (_isSubmitting)
+            return;
+
         var added = 0;
         var ignored = 0;
         foreach (var path in paths)
@@ -88,6 +94,9 @@ public sealed partial class MainWindow : Window
 
     private void OnRemoveSelectedClick(object sender, RoutedEventArgs eventArgs)
     {
+        if (_isSubmitting)
+            return;
+
         var selected = QueueList.SelectedItems.Cast<QueueItem>().ToHashSet();
         _queue.RemoveAll(item => selected.Contains(item));
         RefreshQueue(selected.Count > 0 ? $"{selected.Count}件削除しました" : null);
@@ -95,6 +104,9 @@ public sealed partial class MainWindow : Window
 
     private void OnClearClick(object sender, RoutedEventArgs eventArgs)
     {
+        if (_isSubmitting)
+            return;
+
         _queue.Clear();
         RefreshQueue("キューをクリアしました");
     }
@@ -109,6 +121,9 @@ public sealed partial class MainWindow : Window
 
         var pending = _queue.Where(item => item.Status == QueueStatus.Pending).ToList();
         _isSubmitting = true;
+        ChooseFilesButton.IsEnabled = false;
+        PrinterComboBox.IsEnabled = false;
+        QueueSurface.AllowDrop = false;
         PrintButton.IsEnabled = false;
         RemoveButton.IsEnabled = false;
         ClearButton.IsEnabled = false;
@@ -125,12 +140,18 @@ public sealed partial class MainWindow : Window
         finally
         {
             _isSubmitting = false;
+            ChooseFilesButton.IsEnabled = true;
+            PrinterComboBox.IsEnabled = true;
+            QueueSurface.AllowDrop = true;
             RefreshQueue(errorMessage);
         }
     }
 
     private void OnPrinterSelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
     {
+        if (_isSubmitting)
+            return;
+
         PrintButton.IsEnabled = !_isSubmitting && PrinterComboBox.SelectedItem is string
             && _queue.Any(item => item.Status == QueueStatus.Pending);
     }

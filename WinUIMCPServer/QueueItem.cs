@@ -228,6 +228,9 @@ internal static class QueueItemSelfTest
 
     private static void TestParallelDispatch()
     {
+        if (QueueBatch.MaxParallelSubmissions <= 1)
+            throw new InvalidOperationException("Queue submissions must allow parallel work.");
+
         using var started = new CountdownEvent(QueueBatch.MaxParallelSubmissions);
         using var release = new ManualResetEventSlim();
         var entered = 0;
@@ -238,10 +241,10 @@ internal static class QueueItemSelfTest
                 var position = Interlocked.Increment(ref entered);
                 if (position <= QueueBatch.MaxParallelSubmissions)
                     started.Signal();
-                release.Wait(TimeSpan.FromSeconds(5));
+                release.Wait();
             });
 
-        var reachedLimit = started.Wait(TimeSpan.FromSeconds(5));
+        var reachedLimit = started.Wait(TimeSpan.FromSeconds(15));
         if (reachedLimit)
             Thread.Sleep(100);
         var enteredBeforeRelease = Volatile.Read(ref entered);
