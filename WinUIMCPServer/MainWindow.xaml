@@ -70,6 +70,15 @@
                         <KeyboardAccelerator Key="Delete" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
+                <AppBarButton
+                    x:Name="ResendButton"
+                    Click="OnResendClick"
+                    IsEnabled="False"
+                    Label="送信済みを再送">
+                    <AppBarButton.Icon>
+                        <SymbolIcon Symbol="Refresh" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
                 <CommandBar.SecondaryCommands>
                     <AppBarButton
                         x:Name="ClearButton"
@@ -175,7 +184,9 @@
                         x:Name="QueueList"
                         HorizontalContentAlignment="Stretch"
                         SelectionChanged="OnQueueSelectionChanged"
-                        SelectionMode="Multiple">
+                        SelectionMode="Multiple"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        ScrollViewer.VerticalScrollMode="Enabled">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />

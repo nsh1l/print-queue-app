@@ -112,6 +112,12 @@ public sealed partial class MainWindow : Window
     }
 
     private async void OnPrintAllClick(object sender, RoutedEventArgs eventArgs)
+        => await SubmitBatchAsync(_queue.Where(item => item.Status == QueueStatus.Pending).ToList(), "送信");
+
+    private async void OnResendClick(object sender, RoutedEventArgs eventArgs)
+        => await SubmitBatchAsync(_queue.Where(item => item.Status == QueueStatus.Submitted).ToList(), "再送");
+
+    private async Task SubmitBatchAsync(IReadOnlyList<QueueItem> items, string action)
     {
         if (PrinterComboBox.SelectedItem is not string printerName)
         {
@@ -119,19 +125,22 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        var pending = _queue.Where(item => item.Status == QueueStatus.Pending).ToList();
+        if (items.Count == 0)
+            return;
+
         _isSubmitting = true;
         ChooseFilesButton.IsEnabled = false;
         PrinterComboBox.IsEnabled = false;
         QueueSurface.AllowDrop = false;
         PrintButton.IsEnabled = false;
+        ResendButton.IsEnabled = false;
         RemoveButton.IsEnabled = false;
         ClearButton.IsEnabled = false;
-        SetStatus($"{pending.Count}件を{printerName}へ送信中");
+        SetStatus($"{items.Count}件を{printerName}へ{action}中");
         string? errorMessage = null;
         try
         {
-            await QueueBatch.SubmitAsync(pending, printerName);
+            await QueueBatch.SubmitAsync(items, printerName);
         }
         catch (Exception exception)
         {
@@ -152,8 +161,9 @@ public sealed partial class MainWindow : Window
         if (_isSubmitting)
             return;
 
-        PrintButton.IsEnabled = !_isSubmitting && PrinterComboBox.SelectedItem is string
-            && _queue.Any(item => item.Status == QueueStatus.Pending);
+        var hasPrinter = PrinterComboBox.SelectedItem is string;
+        PrintButton.IsEnabled = hasPrinter && _queue.Any(item => item.Status == QueueStatus.Pending);
+        ResendButton.IsEnabled = hasPrinter && _queue.Any(item => item.Status == QueueStatus.Submitted);
     }
 
     private void LoadPrinters()
@@ -190,6 +200,7 @@ public sealed partial class MainWindow : Window
         RemoveButton.IsEnabled = false;
         ClearButton.IsEnabled = !_isSubmitting && _queue.Count > 0;
         PrintButton.IsEnabled = !_isSubmitting && pending > 0 && PrinterComboBox.SelectedItem is string;
+        ResendButton.IsEnabled = !_isSubmitting && submitted > 0 && PrinterComboBox.SelectedItem is string;
     }
 
     private void SetStatus(string message)
