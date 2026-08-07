@@ -24,6 +24,12 @@ public sealed class QueueItem
     {
         Path = System.IO.Path.GetFullPath(path);
         Name = System.IO.Path.GetFileName(Path);
+        if (File.Exists(Path))
+        {
+            var fileInfo = new FileInfo(Path);
+            FileSize = fileInfo.Length;
+            LastWriteTimeUtc = fileInfo.LastWriteTimeUtc;
+        }
     }
 
     public string Path { get; }
@@ -32,6 +38,8 @@ public sealed class QueueItem
     public string Detail { get; private set; } = "待機中";
     public DateTimeOffset? SubmittedAt { get; private set; }
     public string? PrinterName { get; private set; }
+    public long? FileSize { get; private set; }
+    public DateTime? LastWriteTimeUtc { get; private set; }
     public string DirectoryPath => System.IO.Path.GetDirectoryName(Path) ?? string.Empty;
     public string ExtensionLabel => System.IO.Path.GetExtension(Path).TrimStart('.').ToUpperInvariant();
     public string AccessibleName => $"{Name}、{Detail}";
@@ -98,9 +106,20 @@ public sealed class QueueItem
         Detail = "待機中";
     }
 
+    public string? GetFileChangeWarning()
+    {
+        if (!File.Exists(Path)) return "ファイルが見つかりません";
+        if (FileSize is null || LastWriteTimeUtc is null) return null;
+
+        var fileInfo = new FileInfo(Path);
+        return fileInfo.Length != FileSize || fileInfo.LastWriteTimeUtc != LastWriteTimeUtc
+            ? "キュー追加後にファイルが変更されています"
+            : null;
+    }
+
     public override string ToString() => $"{Name} — {Detail}";
 
-    public QueueItemSnapshot ToSnapshot() => new(Path, Status, Detail, SubmittedAt, PrinterName);
+    public QueueItemSnapshot ToSnapshot() => new(Path, Status, Detail, SubmittedAt, PrinterName, FileSize, LastWriteTimeUtc);
 
     public static QueueItem FromSnapshot(QueueItemSnapshot snapshot)
     {
@@ -111,6 +130,8 @@ public sealed class QueueItem
             SubmittedAt = snapshot.SubmittedAt,
             PrinterName = snapshot.PrinterName,
         };
+        item.FileSize = snapshot.FileSize ?? item.FileSize;
+        item.LastWriteTimeUtc = snapshot.LastWriteTimeUtc ?? item.LastWriteTimeUtc;
         return item;
     }
 
@@ -126,7 +147,9 @@ public sealed record QueueItemSnapshot(
     QueueStatus Status,
     string Detail,
     DateTimeOffset? SubmittedAt,
-    string? PrinterName);
+    string? PrinterName,
+    long? FileSize = null,
+    DateTime? LastWriteTimeUtc = null);
 
 internal static class QueuePersistence
 {
@@ -338,6 +361,14 @@ internal static class QueueItemSelfTest
             throw new InvalidOperationException("Supported documents must be accepted.");
         if (QueueItem.IsSupported("notes.txt"))
             throw new InvalidOperationException("Unsupported documents must be rejected.");
+
+        var changedPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{Guid.NewGuid()}.pdf");
+        File.WriteAllText(changedPath, "before");
+        var changed = new QueueItem(changedPath);
+        File.WriteAllText(changedPath, "after");
+        if (changed.GetFileChangeWarning() is null)
+            throw new InvalidOperationException("Changed documents must be detected before submission.");
+        File.Delete(changedPath);
 
         var withoutPrinter = new QueueItem(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{Guid.NewGuid()}.pdf"));
         withoutPrinter.SubmitToPrinter(string.Empty);

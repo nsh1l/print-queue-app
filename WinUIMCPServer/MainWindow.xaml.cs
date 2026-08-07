@@ -96,6 +96,7 @@ public sealed partial class MainWindow : Window
         RemoveButton.IsEnabled = !_isSubmitting && selected.Count > 0;
         MoveUpButton.IsEnabled = !_isSubmitting && selected.Count == 1 && _queue.IndexOf(selected[0]) > 0;
         MoveDownButton.IsEnabled = !_isSubmitting && selected.Count == 1 && _queue.IndexOf(selected[0]) < _queue.Count - 1;
+        if (!_isSubmitting) UpdateSelectionButtons();
     }
 
     private void OnMoveUpClick(object sender, RoutedEventArgs eventArgs) => MoveSelected(-1);
@@ -141,6 +142,18 @@ public sealed partial class MainWindow : Window
     private async void OnRetryErrorsClick(object sender, RoutedEventArgs eventArgs)
         => await SubmitBatchAsync(_queue.Where(item => item.Status == QueueStatus.Error).ToList(), "エラー再送", true);
 
+    private async void OnSendSelectedClick(object sender, RoutedEventArgs eventArgs)
+        => await SubmitBatchAsync(SelectedItems(item => item.Status == QueueStatus.Pending), "選択送信");
+
+    private async void OnResendSelectedClick(object sender, RoutedEventArgs eventArgs)
+        => await SubmitBatchAsync(SelectedItems(item => item.Status == QueueStatus.Submitted), "選択再送");
+
+    private async void OnRetrySelectedErrorsClick(object sender, RoutedEventArgs eventArgs)
+        => await SubmitBatchAsync(SelectedItems(item => item.Status == QueueStatus.Error), "選択エラー再送", true);
+
+    private IReadOnlyList<QueueItem> SelectedItems(Func<QueueItem, bool> predicate)
+        => QueueList.SelectedItems.Cast<QueueItem>().Where(predicate).ToList();
+
     private async Task SubmitBatchAsync(IReadOnlyList<QueueItem> items, string action, bool resetErrors = false)
     {
         if (PrinterComboBox.SelectedItem is not string printerName)
@@ -149,6 +162,7 @@ public sealed partial class MainWindow : Window
             return;
         }
         if (items.Count == 0) return;
+        if (!await ConfirmChangedFilesAsync(items)) return;
 
         var dialog = new ContentDialog
         {
@@ -160,6 +174,7 @@ public sealed partial class MainWindow : Window
             XamlRoot = Root.XamlRoot,
         };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        if (!await ConfirmChangedFilesAsync(items)) return;
 
         if (resetErrors)
             foreach (var item in items)
@@ -183,6 +198,27 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private async Task<bool> ConfirmChangedFilesAsync(IReadOnlyList<QueueItem> items)
+    {
+        var warnings = items
+            .Select(item => (item.Name, Warning: item.GetFileChangeWarning()))
+            .Where(item => item.Warning is not null)
+            .Select(item => $"・{item.Name}: {item.Warning}")
+            .ToList();
+        if (warnings.Count == 0) return true;
+
+        var dialog = new ContentDialog
+        {
+            Title = "ファイルの状態を確認してください",
+            Content = string.Join("\n", warnings),
+            PrimaryButtonText = "そのまま続行",
+            CloseButtonText = "キャンセル",
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = Root.XamlRoot,
+        };
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
+
     private void SetControlsEnabled(bool enabled)
     {
         ChooseFilesButton.IsEnabled = enabled;
@@ -196,7 +232,19 @@ public sealed partial class MainWindow : Window
         RemoveButton.IsEnabled = false;
         MoveUpButton.IsEnabled = false;
         MoveDownButton.IsEnabled = false;
+        SendSelectedButton.IsEnabled = false;
+        ResendSelectedButton.IsEnabled = false;
+        RetrySelectedErrorsButton.IsEnabled = false;
         ClearButton.IsEnabled = enabled && _queue.Count > 0;
+        if (enabled) UpdateSelectionButtons();
+    }
+
+    private void UpdateSelectionButtons()
+    {
+        var selected = QueueList.SelectedItems.Cast<QueueItem>().ToList();
+        SendSelectedButton.IsEnabled = selected.Any(item => item.Status == QueueStatus.Pending);
+        ResendSelectedButton.IsEnabled = selected.Any(item => item.Status == QueueStatus.Submitted);
+        RetrySelectedErrorsButton.IsEnabled = selected.Any(item => item.Status == QueueStatus.Error);
     }
 
     private void OnPrinterSelectionChanged(object sender, SelectionChangedEventArgs eventArgs)

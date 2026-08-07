@@ -36,6 +36,9 @@
                 <AppBarButton x:Name="MoveDownButton" Click="OnMoveDownClick" IsEnabled="False" Label="下へ"><AppBarButton.Icon><FontIcon Glyph="&#xE70D;" /></AppBarButton.Icon></AppBarButton>
                 <AppBarButton x:Name="RetryErrorsButton" Click="OnRetryErrorsClick" IsEnabled="False" Label="エラーを再送"><AppBarButton.Icon><SymbolIcon Symbol="Refresh" /></AppBarButton.Icon></AppBarButton>
                 <AppBarButton x:Name="ResendButton" Click="OnResendClick" IsEnabled="False" Label="送信済みを再送"><AppBarButton.Icon><SymbolIcon Symbol="Refresh" /></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="SendSelectedButton" Click="OnSendSelectedClick" IsEnabled="False" Label="選択を送信"><AppBarButton.Icon><SymbolIcon Symbol="Play" /></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="ResendSelectedButton" Click="OnResendSelectedClick" IsEnabled="False" Label="選択を再送"><AppBarButton.Icon><SymbolIcon Symbol="Refresh" /></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="RetrySelectedErrorsButton" Click="OnRetrySelectedErrorsClick" IsEnabled="False" Label="選択エラーを再送"><AppBarButton.Icon><SymbolIcon Symbol="Refresh" /></AppBarButton.Icon></AppBarButton>
                 <CommandBar.SecondaryCommands>
                     <AppBarButton x:Name="ClearButton" Click="OnClearClick" IsEnabled="False" Label="すべてクリア"><AppBarButton.Icon><SymbolIcon Symbol="Clear" /></AppBarButton.Icon></AppBarButton>
                     <AppBarButton Click="OnOpenHistoryClick" Label="操作履歴を開く"><AppBarButton.Icon><SymbolIcon Symbol="Clock" /></AppBarButton.Icon></AppBarButton>
