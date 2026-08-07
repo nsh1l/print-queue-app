@@ -4,10 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:PrintQueueApp.WinUI">
 
-    <Grid
-        x:Name="Root"
-        Padding="24,20,24,16"
-        Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid x:Name="Root" Padding="24,20,24,16" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -16,277 +13,101 @@
         </Grid.RowDefinitions>
 
         <Grid Margin="0,0,0,12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
             <StackPanel Spacing="2">
-                <TextBlock
-                    FontSize="28"
-                    FontWeight="SemiBold"
-                    Text="AYP Print-Queue" />
-                <TextBlock
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="PDF・Excelファイルをまとめて選択したプリンターへ送信します" />
+                <TextBlock FontSize="28" FontWeight="SemiBold" Text="AYP Print-Queue" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="PDF・Excelファイルをまとめて選択したプリンターへ送信します" />
             </StackPanel>
-            <TextBlock
-                x:Name="QueueCountText"
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock x:Name="QueueCountText" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </Grid>
 
         <Grid Grid.Row="1" Margin="0,0,0,12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <CommandBar
-                Background="Transparent"
-                DefaultLabelPosition="Right"
-                IsDynamicOverflowEnabled="True">
-                <AppBarButton
-                    x:Name="ChooseFilesButton"
-                    Click="OnChooseFilesClick"
-                    Label="ファイルを追加"
-                    AutomationProperties.HelpText="PDFまたはExcelファイルを選択します。ショートカットはCtrl+Oです。">
-                    <AppBarButton.Icon>
-                        <SymbolIcon Symbol="Add" />
-                    </AppBarButton.Icon>
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="O" Modifiers="Control" />
-                    </AppBarButton.KeyboardAccelerators>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <CommandBar Background="Transparent" DefaultLabelPosition="Right" IsDynamicOverflowEnabled="True">
+                <AppBarButton x:Name="ChooseFilesButton" Click="OnChooseFilesClick" Label="ファイルを追加" AutomationProperties.HelpText="PDFまたはExcelファイルを選択します。ショートカットはCtrl+Oです.">
+                    <AppBarButton.Icon><SymbolIcon Symbol="Add" /></AppBarButton.Icon>
+                    <AppBarButton.KeyboardAccelerators><KeyboardAccelerator Key="O" Modifiers="Control" /></AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton
-                    x:Name="RemoveButton"
-                    Click="OnRemoveSelectedClick"
-                    IsEnabled="False"
-                    Label="選択を削除">
-                    <AppBarButton.Icon>
-                        <SymbolIcon Symbol="Delete" />
-                    </AppBarButton.Icon>
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="Delete" />
-                    </AppBarButton.KeyboardAccelerators>
+                <AppBarButton x:Name="RemoveButton" Click="OnRemoveSelectedClick" IsEnabled="False" Label="選択を削除">
+                    <AppBarButton.Icon><SymbolIcon Symbol="Delete" /></AppBarButton.Icon>
+                    <AppBarButton.KeyboardAccelerators><KeyboardAccelerator Key="Delete" /></AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton
-                    x:Name="ResendButton"
-                    Click="OnResendClick"
-                    IsEnabled="False"
-                    Label="送信済みを再送">
-                    <AppBarButton.Icon>
-                        <SymbolIcon Symbol="Refresh" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
+                <AppBarButton x:Name="MoveUpButton" Click="OnMoveUpClick" IsEnabled="False" Label="上へ"><AppBarButton.Icon><SymbolIcon Symbol="Up" /></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="MoveDownButton" Click="OnMoveDownClick" IsEnabled="False" Label="下へ"><AppBarButton.Icon><FontIcon Glyph="&#xE70D;" /></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="RetryErrorsButton" Click="OnRetryErrorsClick" IsEnabled="False" Label="エラーを再送"><AppBarButton.Icon><SymbolIcon Symbol="Refresh" /></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Name="ResendButton" Click="OnResendClick" IsEnabled="False" Label="送信済みを再送"><AppBarButton.Icon><SymbolIcon Symbol="Refresh" /></AppBarButton.Icon></AppBarButton>
                 <CommandBar.SecondaryCommands>
-                    <AppBarButton
-                        x:Name="ClearButton"
-                        Click="OnClearClick"
-                        IsEnabled="False"
-                        Label="すべてクリア">
-                        <AppBarButton.Icon>
-                            <SymbolIcon Symbol="Clear" />
-                        </AppBarButton.Icon>
-                    </AppBarButton>
+                    <AppBarButton x:Name="ClearButton" Click="OnClearClick" IsEnabled="False" Label="すべてクリア"><AppBarButton.Icon><SymbolIcon Symbol="Clear" /></AppBarButton.Icon></AppBarButton>
+                    <AppBarButton Click="OnOpenHistoryClick" Label="操作履歴を開く"><AppBarButton.Icon><SymbolIcon Symbol="Clock" /></AppBarButton.Icon></AppBarButton>
                 </CommandBar.SecondaryCommands>
             </CommandBar>
-            <StackPanel
-                Grid.Column="1"
-                Margin="12,0"
-                VerticalAlignment="Center"
-                Spacing="3">
-                <TextBlock
-                    FontSize="12"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="プリンター" />
-                <ComboBox
-                    x:Name="PrinterComboBox"
-                    Width="260"
-                    AutomationProperties.Name="送信先プリンター"
-                    PlaceholderText="プリンターを選択"
-                    SelectionChanged="OnPrinterSelectionChanged" />
+            <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center" Spacing="3">
+                <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="プリンター" />
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <ComboBox x:Name="PrinterComboBox" Width="260" AutomationProperties.Name="送信先プリンター" PlaceholderText="プリンターを選択" SelectionChanged="OnPrinterSelectionChanged" />
+                    <Button x:Name="RefreshPrintersButton" Click="OnRefreshPrintersClick" Content="更新" AutomationProperties.Name="プリンター一覧を更新" />
+                </StackPanel>
+                <TextBlock x:Name="PrinterHealthText" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="状態確認中" />
             </StackPanel>
-            <Button
-                x:Name="PrintButton"
-                Grid.Column="2"
-                Padding="16,8"
-                VerticalAlignment="Center"
-                AutomationProperties.Name="待機中のファイルを選択したプリンターへ送信"
-                Click="OnPrintAllClick"
-                Content="選択したプリンターへ送信"
-                IsEnabled="False"
-                Style="{StaticResource AccentButtonStyle}" />
+            <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="4">
+                <Button x:Name="PrintButton" AutomationProperties.Name="待機中のファイルを選択したプリンターへ送信" Click="OnPrintAllClick" Content="選択したプリンターへ送信" IsEnabled="False" Style="{StaticResource AccentButtonStyle}" />
+                <CheckBox x:Name="PreserveOrderCheckBox" Content="順番どおりに送信" ToolTipService.ToolTip="並列送信を無効にして、キュー順に1件ずつ送信します" />
+            </StackPanel>
         </Grid>
 
-        <Border
-            x:Name="QueueSurface"
-            Grid.Row="2"
-            AllowDrop="True"
-            AutomationProperties.Name="印刷ファイルのドロップ領域とキュー一覧"
-            Background="{ThemeResource LayerFillColorDefaultBrush}"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-            BorderThickness="1"
-            CornerRadius="8"
-            DragOver="OnDragOver"
-            Drop="OnDrop">
+        <Border x:Name="QueueSurface" Grid.Row="2" AllowDrop="True" AutomationProperties.Name="印刷ファイルのドロップ領域とキュー一覧" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" DragOver="OnDragOver" Drop="OnDrop">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <Grid
-                    Padding="14,10"
-                    Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                <Grid Padding="14,10" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                     <SymbolIcon Margin="0,0,10,0" Symbol="Print" />
-                    <TextBlock
-                        Grid.Column="1"
-                        VerticalAlignment="Center"
-                        FontWeight="SemiBold"
-                        Text="印刷するファイル" />
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontWeight="SemiBold" Text="印刷するファイル" />
                 </Grid>
-
-                <Grid
-                    Grid.Row="1"
-                    Padding="16,9"
-                    Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="44" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="110" />
-                        <ColumnDefinition Width="180" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
-                        Grid.Column="1"
-                        FontSize="12"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        Text="名前" />
-                    <TextBlock
-                        Grid.Column="2"
-                        FontSize="12"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        Text="種類" />
-                    <TextBlock
-                        Grid.Column="3"
-                        FontSize="12"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        Text="状態" />
+                <Grid Grid.Row="1" Padding="16,9" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="44" /><ColumnDefinition Width="*" /><ColumnDefinition Width="110" /><ColumnDefinition Width="180" /><ColumnDefinition Width="160" /></Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="1" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="名前" />
+                    <TextBlock Grid.Column="2" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="種類" />
+                    <TextBlock Grid.Column="3" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="状態" />
+                    <TextBlock Grid.Column="4" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="送信日時" />
                 </Grid>
-
                 <Grid Grid.Row="2">
-                    <ListView
-                        x:Name="QueueList"
-                        HorizontalContentAlignment="Stretch"
-                        SelectionChanged="OnQueueSelectionChanged"
-                        SelectionMode="Multiple"
-                        ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        ScrollViewer.VerticalScrollMode="Enabled">
+                    <ListView x:Name="QueueList" HorizontalContentAlignment="Stretch" SelectionChanged="OnQueueSelectionChanged" SelectionMode="Multiple" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled">
                         <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="Padding" Value="12,5" />
-                            </Style>
+                            <Style TargetType="ListViewItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /><Setter Property="Padding" Value="12,5" /></Style>
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="local:QueueItem">
-                                <Grid
-                                    MinHeight="52"
-                                    AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneTime}"
-                                    ToolTipService.ToolTip="{x:Bind Detail, Mode=OneTime}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="44" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="110" />
-                                        <ColumnDefinition Width="180" />
-                                    </Grid.ColumnDefinitions>
-                                    <FontIcon
-                                        FontSize="22"
-                                        Foreground="{ThemeResource AccentFillColorDefaultBrush}"
-                                        Glyph="&#xE8A5;" />
-                                    <StackPanel
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        Spacing="2">
-                                        <TextBlock
-                                            FontWeight="SemiBold"
-                                            Text="{x:Bind Name, Mode=OneTime}"
-                                            TextTrimming="CharacterEllipsis" />
-                                        <TextBlock
-                                            FontSize="12"
-                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                            Text="{x:Bind DirectoryPath, Mode=OneTime}"
-                                            TextTrimming="CharacterEllipsis" />
+                                <Grid MinHeight="52" AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneTime}" ToolTipService.ToolTip="{x:Bind Detail, Mode=OneTime}">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="44" /><ColumnDefinition Width="*" /><ColumnDefinition Width="110" /><ColumnDefinition Width="180" /><ColumnDefinition Width="160" /></Grid.ColumnDefinitions>
+                                    <FontIcon FontSize="22" Foreground="{ThemeResource AccentFillColorDefaultBrush}" Glyph="&#xE8A5;" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock FontWeight="SemiBold" Text="{x:Bind Name, Mode=OneTime}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind DirectoryPath, Mode=OneTime}" TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
-                                    <TextBlock
-                                        Grid.Column="2"
-                                        VerticalAlignment="Center"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        Text="{x:Bind ExtensionLabel, Mode=OneTime}" />
-                                    <StackPanel
-                                        Grid.Column="3"
-                                        VerticalAlignment="Center"
-                                        Orientation="Horizontal"
-                                        Spacing="7">
-                                        <FontIcon
-                                            FontSize="14"
-                                            Glyph="{x:Bind StatusGlyph, Mode=OneTime}" />
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ExtensionLabel, Mode=OneTime}" />
+                                    <StackPanel Grid.Column="3" VerticalAlignment="Center" Orientation="Horizontal" Spacing="7">
+                                        <FontIcon FontSize="14" Glyph="{x:Bind StatusGlyph, Mode=OneTime}" />
                                         <TextBlock Text="{x:Bind StatusLabel, Mode=OneTime}" />
                                     </StackPanel>
+                                    <TextBlock Grid.Column="4" VerticalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind SubmittedAtLabel, Mode=OneTime}" />
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
-
-                    <StackPanel
-                        x:Name="EmptyState"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="8">
-                        <FontIcon
-                            FontSize="38"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Glyph="&#xE8B7;" />
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            FontSize="18"
-                            FontWeight="SemiBold"
-                            Text="印刷するファイルをここへドロップ" />
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="PDF・XLSX・XLS・XLSMに対応しています" />
-                        <Button
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Center"
-                            Click="OnChooseFilesClick"
-                            Content="ファイルを選択" />
+                    <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                        <FontIcon FontSize="38" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE8B7;" />
+                        <TextBlock HorizontalAlignment="Center" FontSize="18" FontWeight="SemiBold" Text="印刷するファイルをここへドロップ" />
+                        <TextBlock HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="PDF・XLSX・XLS・XLSMに対応しています" />
+                        <Button Margin="0,8,0,0" HorizontalAlignment="Center" Click="OnChooseFilesClick" Content="ファイルを選択" />
                     </StackPanel>
                 </Grid>
             </Grid>
         </Border>
 
         <Grid Grid.Row="3" Margin="4,10,4,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock
-                x:Name="StatusText"
-                VerticalAlignment="Center"
-                AutomationProperties.LiveSetting="Polite"
-                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            <TextBlock
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                FontSize="12"
-                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                Text="送信済み = Windowsへ印刷要求を渡した状態" />
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="送信済み = Windowsへ印刷要求を渡した状態。物理印刷はスプーラー・プリンターで確認" />
         </Grid>
     </Grid>
 </Window>
