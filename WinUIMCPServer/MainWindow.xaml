@@ -4,7 +4,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:PrintQueueApp.WinUI">
 
-    <Grid x:Name="Root" Padding="24,20,24,16" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <ScrollViewer x:Name="MainScrollViewer"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto"
+                  ZoomMode="Enabled"
+                  MinZoomFactor="0.8"
+                  MaxZoomFactor="1.6"
+                  ViewChanged="OnMainScrollViewerViewChanged">
+    <Grid x:Name="Root" MinWidth="1000" MinHeight="700" Padding="24,20,24,16" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -18,9 +25,18 @@
                 <TextBlock FontSize="28" FontWeight="SemiBold" Text="AYP Print-Queue" />
                 <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="PDF・Excelファイルをまとめて選択したプリンターへ送信します" />
             </StackPanel>
-            <Border Grid.Column="1" Padding="10,6" VerticalAlignment="Center" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="6">
-                <TextBlock x:Name="QueueCountText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            </Border>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button x:Name="ZoomOutButton" Width="32" Height="32" Padding="0" Click="OnZoomOutClick" Content="−" AutomationProperties.Name="メインUIを縮小" />
+                    <Slider x:Name="ZoomSlider" Width="110" Minimum="0.8" Maximum="1.6" StepFrequency="0.1" Value="1" VerticalAlignment="Center" ValueChanged="OnZoomSliderValueChanged" AutomationProperties.Name="メインUIの拡大率" AutomationProperties.HelpText="Ctrlキーを押しながらマウスホイールを回しても変更できます" />
+                    <Button x:Name="ZoomInButton" Width="32" Height="32" Padding="0" Click="OnZoomInClick" Content="+" AutomationProperties.Name="メインUIを拡大" />
+                    <Button x:Name="ZoomResetButton" Height="32" Padding="10,0" Click="OnZoomResetClick" Content="100%" AutomationProperties.Name="メインUIの拡大率を100%に戻す" />
+                    <TextBlock x:Name="ZoomLevelText" MinWidth="42" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="100%" TextAlignment="Center" />
+                </StackPanel>
+                <Border Padding="10,6" VerticalAlignment="Center" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="6">
+                    <TextBlock x:Name="QueueCountText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Border>
+            </StackPanel>
         </Grid>
 
         <Grid Grid.Row="1" Margin="0,0,0,12">
@@ -125,4 +141,5 @@
             </Grid>
         </Border>
     </Grid>
+    </ScrollViewer>
 </Window>

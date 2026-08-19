@@ -15,10 +15,14 @@ public sealed partial class MainWindow : Window
     private readonly List<QueueItem> _queue = [];
     private readonly DispatcherTimer _healthTimer;
     private bool _isSubmitting;
+    private bool _isUpdatingZoom;
 
     public MainWindow()
     {
+        _isUpdatingZoom = true;
         InitializeComponent();
+        _isUpdatingZoom = false;
+        UpdateZoomControls(MainScrollViewer.ZoomFactor);
         Title = "AYP Print-Queue";
         AppWindow.Resize(new SizeInt32(1100, 760));
         Closed += (_, _) => SaveQueue();
@@ -30,6 +34,43 @@ public sealed partial class MainWindow : Window
         _healthTimer.Tick += (_, _) => RefreshPrinterHealth();
         _healthTimer.Start();
         RefreshPrinterHealth();
+    }
+
+    private void OnZoomOutClick(object sender, RoutedEventArgs eventArgs)
+        => SetZoom(UiZoom.Decrease(MainScrollViewer.ZoomFactor));
+
+    private void OnZoomInClick(object sender, RoutedEventArgs eventArgs)
+        => SetZoom(UiZoom.Increase(MainScrollViewer.ZoomFactor));
+
+    private void OnZoomResetClick(object sender, RoutedEventArgs eventArgs)
+        => SetZoom(UiZoom.Default);
+
+    private void OnZoomSliderValueChanged(object sender, RangeBaseValueChangedEventArgs eventArgs)
+    {
+        if (!_isUpdatingZoom)
+            SetZoom(eventArgs.NewValue);
+    }
+
+    private void OnMainScrollViewerViewChanged(object sender, ScrollViewerViewChangedEventArgs eventArgs)
+        => UpdateZoomControls(MainScrollViewer.ZoomFactor);
+
+    private void SetZoom(double zoomFactor)
+    {
+        var target = UiZoom.Clamp(zoomFactor);
+        UpdateZoomControls(target);
+        if (Math.Abs(MainScrollViewer.ZoomFactor - target) > 0.001)
+            MainScrollViewer.ChangeView(null, null, (float)target);
+    }
+
+    private void UpdateZoomControls(double zoomFactor)
+    {
+        var target = UiZoom.Clamp(zoomFactor);
+        _isUpdatingZoom = true;
+        ZoomSlider.Value = target;
+        _isUpdatingZoom = false;
+        ZoomLevelText.Text = UiZoom.Label(target);
+        ZoomOutButton.IsEnabled = target > UiZoom.Minimum;
+        ZoomInButton.IsEnabled = target < UiZoom.Maximum;
     }
 
     private async void OnChooseFilesClick(object sender, RoutedEventArgs eventArgs)

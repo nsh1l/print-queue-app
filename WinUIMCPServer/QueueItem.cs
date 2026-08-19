@@ -357,6 +357,7 @@ internal static class QueueItemSelfTest
 {
     public static void Run()
     {
+        UiZoomSelfTest.Run();
         if (!QueueItem.IsSupported("report.xlsx") || !QueueItem.IsSupported("invoice.XLS") || !QueueItem.IsSupported("contract.pdf"))
             throw new InvalidOperationException("Supported documents must be accepted.");
         if (QueueItem.IsSupported("notes.txt"))
@@ -413,5 +414,35 @@ internal static class QueueItemSelfTest
 
         if (!reachedLimit || enteredBeforeRelease != QueueBatch.MaxParallelSubmissions)
             throw new InvalidOperationException("Queue submissions must start in parallel and respect the limit.");
+    }
+}
+
+internal static class UiZoom
+{
+    internal const double Minimum = 0.8;
+    internal const double Maximum = 1.6;
+    internal const double Default = 1.0;
+    internal const double Step = 0.1;
+
+    internal static double Clamp(double value)
+        => Math.Clamp(Math.Round(value, 1), Minimum, Maximum);
+
+    internal static double Decrease(double value) => Clamp(value - Step);
+
+    internal static double Increase(double value) => Clamp(value + Step);
+
+    internal static string Label(double value) => $"{Clamp(value) * 100:0}%";
+}
+
+internal static class UiZoomSelfTest
+{
+    internal static void Run()
+    {
+        if (UiZoom.Clamp(0.1) != UiZoom.Minimum || UiZoom.Clamp(2.0) != UiZoom.Maximum)
+            throw new InvalidOperationException("UI zoom must stay within its supported range.");
+        if (UiZoom.Decrease(UiZoom.Minimum) != UiZoom.Minimum || UiZoom.Increase(UiZoom.Maximum) != UiZoom.Maximum)
+            throw new InvalidOperationException("UI zoom buttons must respect their limits.");
+        if (UiZoom.Label(UiZoom.Default) != "100%")
+            throw new InvalidOperationException("UI zoom labels must show the percentage.");
     }
 }
