@@ -6,6 +6,7 @@
     <WindowsPackageType>None</WindowsPackageType>
     <RootNamespace>PrintQueueApp.WinUI</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\PrintQueue.ico</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Platforms>x64</Platforms>
     <Version>1.2.0</Version>
